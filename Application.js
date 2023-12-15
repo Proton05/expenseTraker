@@ -101,6 +101,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Initial render 
+    // Initial render xnnx cn
     renderExpenses();
 });
