@@ -1,3 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Manager</title>
+    <!-- Include Axios library -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+<form id="expenseForm">
+    <label for="expenseName">Expense Name:</label>
+    <input type="text" id="expenseName" required>
+
+    <label for="expenseAmount">Expense Amount:</label>
+    <input type="number" id="expenseAmount" required>
+
+    <label for="expenseCat">Expense Category:</label>
+    <input type="text" id="expenseCat" required>
+
+    <input type="hidden" id="editIndex" value="-1">
+    
+    <button type="submit">Submit</button>
+</form>
+
+<ul id="expenseList"></ul>
+
+<script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('expenseForm');
     const expenseNameInput = document.getElementById('expenseName');
@@ -6,15 +35,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const editIndexInput = document.getElementById('editIndex');
     const expenseList = document.getElementById('expenseList');
 
-    // Load expenses from local storage
     let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
 
-    // Function to render expenses
     function renderExpenses() {
         expenseList.innerHTML = '';
         expenses.forEach(function (expense, index) {
             const listItem = document.createElement('li');
-            listItem.textContent = `${expense.name} - $${expense.amount} - ${expense.cat} `;
+            listItem.textContent = `${expense.name}- $${expense.amount}-${expense.cat} `;
 
             const editButton = createButton('Edit', index, editExpense);
             const deleteButton = createButton('Delete', index, deleteExpense);
@@ -24,25 +51,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             expenseList.appendChild(listItem);
         });
-
-        // Update local storage
-        localStorage.setItem('expenses', JSON.stringify(expenses));
-
-        // Send data to API
-        expenses.forEach(function (expense) {
-            const obj = {
-                name: expense.name,
-                amount: expense.amount,
-                cat: expense.cat
-            };
-
-            axios.post('https://crudcrud.com/api/033a59c15c1f4d9abc7408d7c6d15430/AppData', obj)
-                .then(res => console.log('Data stored on the server:', res.data))
-                .catch(err => console.error('Error storing data on the server:', err));
-        });
+        // storeTheData(); // Commenting this out as it's not necessary here
     }
 
-    // Function to create action buttons (Edit, Delete)
     function createButton(label, index, clickHandler) {
         const button = document.createElement('button');
         button.textContent = label;
@@ -53,7 +64,25 @@ document.addEventListener('DOMContentLoaded', function () {
         return button;
     }
 
-    // Event listener for form submission
+    function storeTheData(event) {
+        // Commenting out preventDefault() as it is preventing form submission
+        // event.preventDefault();
+        const name = expenseNameInput.value;
+        const amount = expenseAmountInput.value;
+        const cat = expenseCatInput.value;
+
+        const obj = { name, amount, cat };
+
+        axios.post('https://crudcrud.com/api/033a59c15c1f4d9abc7408d7c6d15430/AppData', obj)
+            .then(res => {
+                console.log(res);
+                // Assuming you want to update expenses array after successful POST
+                expenses.push(obj);
+                renderExpenses();
+            })
+            .catch(err => console.error(err));
+    }
+
     form.addEventListener('submit', function (event) {
         event.preventDefault();
 
@@ -69,48 +98,39 @@ document.addEventListener('DOMContentLoaded', function () {
         const editIndex = parseInt(editIndexInput.value);
 
         if (editIndex !== -1) {
-            // Editing an existing expense
             expenses[editIndex] = { name, amount, cat };
             editIndexInput.value = -1;
         } else {
-            // Add expense to the array
             expenses.push({ name, amount, cat });
         }
 
-        // Render expenses
         renderExpenses();
 
-        // Clear form inputs
         expenseNameInput.value = '';
         expenseAmountInput.value = '';
         expenseCatInput.value = '';
     });
 
-    // Function to handle editing an expense
     function editExpense(index) {
-        // Populate the form with the expense details for editing
         const expenseToEdit = expenses[index];
         expenseNameInput.value = expenseToEdit.name;
         expenseAmountInput.value = expenseToEdit.amount;
         expenseCatInput.value = expenseToEdit.cat;
-
-        // Set the index for editing
         editIndexInput.value = index;
     }
 
-    // Function to handle deleting an expense
     function deleteExpense(index) {
         const confirmDelete = confirm('Are you sure you want to delete this expense?');
 
         if (confirmDelete) {
-            // Remove the expense
             expenses.splice(index, 1);
-
-            // Render expenses
             renderExpenses();
         }
     }
 
-    // Initial render
     renderExpenses();
 });
+</script>
+
+</body>
+</html>

@@ -13,20 +13,21 @@
       <label for="expenseAmount">Expense Amount:</label>
       <input type="number" id="expenseAmount" required>
 
-      <label for="cata">Choose a cat:</label>
-      <select name="item" id="expenseCat">
-          <option value="Movies">Movies</option>
-          <option value="feul">feul</option>
-          <option value="food">food</option>
-          <option value="audi">Audi</option>
-</select>
+      <label for="cata">Email:</label>
+     
+        <input type="email" id="expenseCat" required>
+        
+
 
       <button type="submit">Add Expense</button>
       <input type="hidden" id="editIndex" value="-1">
   </form>
 
   <ul id="expenseList"></ul>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.min.js"></script>
+ 
     <script src="Application.js"></script>
+    
    </div>
   </div>
 
