@@ -6,40 +6,29 @@ document.addEventListener('DOMContentLoaded', function () {
     const editIndexInput = document.getElementById('editIndex');
     const expenseList = document.getElementById('expenseList');
 
-    // Load expenses from local storage
-    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-
     // Function to render expenses
     function renderExpenses() {
-        expenseList.innerHTML = '';
-        expenses.forEach(function (expense, index) {
-            const listItem = document.createElement('li');
-            listItem.textContent = `${expense.name} - $${expense.amount} - ${expense.cat} `;
+        axios.get('https://crudcrud.com/api/033a59c15c1f4d9abc7408d7c6d15430/AppData')
+            .then(response => {
+                const expenses = response.data;
 
-            const editButton = createButton('Edit', index, editExpense);
-            const deleteButton = createButton('Delete', index, deleteExpense);
+                expenseList.innerHTML = '';
+                expenses.forEach(function (expense, index) {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${expense.name} - $${expense.amount} - ${expense.cat} `;
 
-            listItem.appendChild(editButton);
-            listItem.appendChild(deleteButton);
+                    const editButton = createButton('Edit', index, editExpense);
+                    const deleteButton = createButton('Delete', index, deleteExpense);
 
-            expenseList.appendChild(listItem);
-        });
+                    listItem.appendChild(editButton);
+                    listItem.appendChild(deleteButton);
 
-        // Update local storage
-        localStorage.setItem('expenses', JSON.stringify(expenses));
-
-        // Send data to API
-        expenses.forEach(function (expense) {
-            const obj = {
-                name: expense.name,
-                amount: expense.amount,
-                cat: expense.cat
-            };
-
-            axios.post('https://crudcrud.com/api/033a59c15c1f4d9abc7408d7c6d15430/AppData', obj)
-                .then(res => console.log('Data stored on the server:', res.data))
-                .catch(err => console.error('Error storing data on the server:', err));
-        });
+                    expenseList.appendChild(listItem);
+                });
+            })
+            .catch(err => {
+                console.error('Error fetching data from the server:', err);
+            });
     }
 
     // Function to create action buttons (Edit, Delete)
@@ -70,15 +59,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (editIndex !== -1) {
             // Editing an existing expense
-            expenses[editIndex] = { name, amount, cat };
+            axios.put(`https://crudcrud.com/api/033a59c15c1f4d9abc7408d7c6d15430/AppData/${editIndex}`, {
+                name,
+                amount,
+                cat
+            })
+                .then(res => {
+                    console.log('Expense updated on the server:', res.data);
+                    renderExpenses();
+                })
+                .catch(err => {
+                    console.error('Error updating expense on the server:', err);
+                });
+
             editIndexInput.value = -1;
         } else {
-            // Add expense to the array
-            expenses.push({ name, amount, cat });
+            // Add new expense
+            axios.post('https://crudcrud.com/api/033a59c15c1f4d9abc7408d7c6d15430/AppData', {
+                name,
+                amount,
+                cat
+            })
+                .then(res => {
+                    console.log('Expense added to the server:', res.data);
+                    renderExpenses();
+                })
+                .catch(err => {
+                    console.error('Error adding expense to the server:', err);
+                });
         }
-
-        // Render expenses
-        renderExpenses();
 
         // Clear form inputs
         expenseNameInput.value = '';
@@ -88,14 +97,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to handle editing an expense
     function editExpense(index) {
-        // Populate the form with the expense details for editing
-        const expenseToEdit = expenses[index];
-        expenseNameInput.value = expenseToEdit.name;
-        expenseAmountInput.value = expenseToEdit.amount;
-        expenseCatInput.value = expenseToEdit.cat;
-
         // Set the index for editing
         editIndexInput.value = index;
+
+        // Populate the form with the expense details for editing
+        axios.get(`https://crudcrud.com/api/033a59c15c1f4d9abc7408d7c6d15430/AppData/${index}`)
+            .then(response => {
+                const expenseToEdit = response.data;
+                expenseNameInput.value = expenseToEdit.name;
+                expenseAmountInput.value = expenseToEdit.amount;
+                expenseCatInput.value = expenseToEdit.cat;
+            })
+            .catch(err => {
+                console.error('Error fetching expense details for editing:', err);
+            });
     }
 
     // Function to handle deleting an expense
@@ -104,10 +119,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (confirmDelete) {
             // Remove the expense
-            expenses.splice(index, 1);
-
-            // Render expenses
-            renderExpenses();
+            axios.delete(`https://crudcrud.com/api/033a59c15c1f4d9abc7408d7c6d15430/AppData/${index}`)
+                .then(res => {
+                    console.log('Expense deleted from the server:', res.data);
+                    renderExpenses();
+                })
+                .catch(err => {
+                    console.error('Error deleting expense from the server:', err);
+                });
         }
     }
 
